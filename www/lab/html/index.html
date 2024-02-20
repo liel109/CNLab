@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <h1 class="moving-title">Computer networks 2023: Exercise 1</h1>
+        <h2 class="fixed-title">Liel Huri</h2>
+        <div class="image-section">
+            <img src="images/landscape1.jpg" alt="Landscape" height="300" width="500"/>
+            <div class="vertical-separator"></div>
+            <img src="images/landscape2.jpg" alt="Landscape" height="300" width="500"/>
+        </div>
+        <br/><br/>
+        <a href="https://moodle.runi.ac.il/2024/course/view.php?id=2401572">Course Website</a>
+        <br/>
+        <a href="https://www.google.com">My Favorite Website</a>
+        <div class="horizontal-separator"></div>
+        <div class="form-section">
+            <h3>Form:</h5>
+            <form id="contact-form" method="post">
+                <input type="text" class="text" id="sender" name="sender" placeholder="Sender"
+                        onfocus="remove_text('name')" autocomplete="on">
+                
+                <input type="text" class="text" id="reciever" name="reciever" placeholder="Reciever" 
+                        onfocus="remove_text('phone')" autocomplete="on">
+
+                <input type="text" class="text" id="subject" name="subject" placeholder="Subject" 
+                        onfocus="remove_text('phone')" autocomplete="on">
+
+                <textarea id="message" name="message" placeholder="Your Message Here..." class="text-box" onfocus="remove_text('message')"></textarea>
+
+                <input id="submit-btn" type="submit" name="submit" value="Submit">
+            </form>
+        </div>
+    </body>
+</html>

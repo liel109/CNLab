@@ -1,0 +1,64 @@
+@keyframes move-title {
+    from {transform: translateX(0);}
+    to {transform: translateX(150px);}
+}
+
+body {
+    margin-left: 15px;
+}
+
+.moving-title {
+    color: rgb(24, 24, 195);
+    animation-name: move-title;
+    animation-duration: 2s;
+    animation-iteration-count: 2;
+    animation-direction: alternate;
+}
+
+.fixed-title {
+    color: red
+}
+
+.image-section {
+    display: flex;
+    justify-content: center;
+}
+
+.vertical-separator {
+    width: 30px;
+    height: auto;
+}
+
+a{
+    font-size: 13pt;
+}
+
+.horizontal-separator {
+    margin-top: 10px;
+    width: auto;
+    height: 1px;
+    background-color: black;
+}
+
+form{
+    height: fit-content;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+}
+
+.text{
+    margin: 10px;
+    width: 150px;
+    font-size: 10pt;
+    padding: 4px;
+}
+
+.text-box{
+    margin: 10px;
+    width: 300px;
+}
+
+#submit-btn {
+    margin: 10px;
+}
