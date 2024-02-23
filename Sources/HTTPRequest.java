@@ -105,7 +105,7 @@ class HTTPRequest
         }
         else
         {
-            response = ResponseGenerator.GenerateInvalidResponse(this, m_ResponseCode);
+            response = ResponseGenerator.GenerateInvalidResponse(m_ResponseCode);
         }
 
         return response;
