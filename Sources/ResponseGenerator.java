@@ -1,29 +1,54 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 public class ResponseGenerator {
 
     public static String GenerateValidResponse(HTTPRequest i_Request) throws IOException {
-        return generateResponse("200 OK", contentType(i_Request.getRequestedPage()),
-                getBody(getDesiredFile(i_Request.getRequestedPage())),
-                i_Request.isChunked(), i_Request.getType() == eHTTPType.HEAD);
+        String response;
+        if (i_Request.getRequestedPage().endsWith("params_info.html")) {
+            response = generateResponse("200 OK", contentType(i_Request.getRequestedPage()),
+                    updateAndReturnParamsInfo(i_Request.getRequestedPage(), i_Request.getParams()),
+                    i_Request.isChunked(), i_Request.getType() == eHTTPType.HEAD);
+        } else {
+            response = generateResponse("200 OK", contentType(i_Request.getRequestedPage()),
+                    getBody(i_Request.getRequestedPage()),
+                    i_Request.isChunked(), i_Request.getType() == eHTTPType.HEAD);
+        }
+        return response;
     }
 
-    public static String GenerateInvalidResponse(HTTPRequest i_Request, int i_StatusCode) {
+    public static String GenerateInvalidResponse(int i_StatusCode) {
         switch (i_StatusCode) {
             case 404:
-                return generateResponse("404 Not Found", "text/html", "<h1>404 Bot Found</h1>", false,
-                        i_Request.getType() == eHTTPType.HEAD);
+                return generateResponse("404 Not Found", "text/html",
+                        "<html><body><h1>404 Not Found</h1></body></html>", false,
+                        false);
             case 400:
-                return generateResponse("400 Bad Request", "text/html", "<h1>400 Bad Request</h1>", false, false);
+                return generateResponse("400 Bad Request", "text/html",
+                        "<html><body><h1>400 Bad Request</h1></body></html>", false, false);
             case 501:
-                return generateResponse("501 Not Implemented", "text/html", "<h1>501 Not Implemented</h1>", false,
+                return generateResponse("501 Not Implemented", "text/html",
+                        "<html><body><h1>501 Not Implemented</h1></body></html>", false,
                         false);
             default:
-                return generateResponse("500 Internal Server Error", "text/html", "<h1>500 Internal Server Error</h1>",
+                return generateResponse("500 Internal Server Error", "text/html",
+                        "<html><body><h1>500 Internal Server Error</h1></body></html>",
                         false, false);
         }
+    }
+
+    private static String updateAndReturnParamsInfo(String i_RequestedPage, HashMap<String, String> i_Params)
+            throws IOException {
+        StringBuilder content = new StringBuilder();
+        String htmlPage = Files.readString(Paths.get(i_RequestedPage));
+        for (String key : i_Params.keySet()) {
+            content.append("<li>" + key + " : " + i_Params.get(key) + "</li>");
+        }
+        htmlPage.replace("PLACEHOLDER", content.toString());
+
+        return htmlPage;
     }
 
     private static String generateResponse(String i_responseStatus, String i_contentType, String i_ResponseBody,
@@ -57,27 +82,19 @@ public class ResponseGenerator {
     private static String contentType(String i_RequestedPage) {
         if (i_RequestedPage.endsWith(".html")) {
             return "text/html";
-        } else if (checkIfImage(i_RequestedPage)) {
-            return "image";
+        } else if (i_RequestedPage.endsWith(".png")) {
+            return "image/png";
+        } else if (i_RequestedPage.endsWith(".gif")) {
+            return "image/gif";
+        } else if (i_RequestedPage.endsWith(".jpeg") || i_RequestedPage.endsWith(".jpg")) {
+            return "image/jpeg";
+        } else if (i_RequestedPage.endsWith(".bmp")) {
+            return "image/bmp";
         } else if (i_RequestedPage.endsWith(".ico")) {
-            return "icon";
+            return "image/x-icon";
         } else {
             return "application/octet-stream";
         }
-    }
-
-    private static Boolean checkIfImage(String i_RequestedPage) {
-        return (i_RequestedPage.endsWith(".png") || i_RequestedPage.endsWith(".jpeg")
-                || i_RequestedPage.endsWith(".jpg") || i_RequestedPage.endsWith(".gif"));
-    }
-
-    private static String getDesiredFile(String i_RequestedPage) {
-        if (i_RequestedPage.isEmpty()) {
-            i_RequestedPage = ConfigParser.getDefaultPagePath();
-        }
-        String path = ConfigParser.getRoot() + i_RequestedPage;
-
-        return path;
     }
 
     private static String getBody(String i_path) throws IOException {
