@@ -7,7 +7,10 @@ public class ResponseGenerator {
 
     public static String GenerateValidResponse(HTTPRequest i_Request) throws IOException {
         String response;
-        if (i_Request.getRequestedPage().endsWith("params_info.html")) {
+        if (i_Request.getType() == eHTTPType.TRACE) {
+            response = generateResponse("200 OK", "message/http", i_Request.getRequestString(), i_Request.isChunked(),
+                    i_Request.getType() == eHTTPType.HEAD);
+        } else if (i_Request.getRequestedPage().endsWith("params_info.html")) {
             response = generateResponse("200 OK", contentType(i_Request.getRequestedPage()),
                     updateAndReturnParamsInfo(i_Request.getRequestedPage(), i_Request.getParams()),
                     i_Request.isChunked(), i_Request.getType() == eHTTPType.HEAD);
@@ -46,7 +49,7 @@ public class ResponseGenerator {
         for (String key : i_Params.keySet()) {
             content.append("<li>" + key + " : " + i_Params.get(key) + "</li>");
         }
-        htmlPage.replace("PLACEHOLDER", content.toString());
+        htmlPage = htmlPage.replace("PLACEHOLDER", content.toString());
 
         return htmlPage;
     }
