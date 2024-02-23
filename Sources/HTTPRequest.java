@@ -1,32 +1,48 @@
 import java.util.HashMap;
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
-class HTTPRequest {
+class HTTPRequest 
+{
+    private String m_RequestString;
     private eHTTPType m_Type;
     private String m_RequestedPage;
-    private Boolean m_IsChunked;
-    private boolean m_IsImageRequested;
+    private boolean m_IsChunked;
     private int m_ContentLength;
     private String m_Referrer;
     private String m_UserAgent;
     private HashMap<String, String> m_Params;
+    private boolean m_IsValidRequest;
+    private int m_ResponseCode;
 
-    public HTTPRequest(String i_HeaderString) throws HTTPException 
+    public HTTPRequest(String i_HeaderString) throws Exception 
     {
-        String firstRow = i_HeaderString.substring(0, i_HeaderString.indexOf("\r\n"));
-        String headersSection = i_HeaderString.substring(i_HeaderString.indexOf("\r\n"));
-        
-        parseFirstRow(firstRow);
-        parseHeadersSection(headersSection);
+        m_RequestString = i_HeaderString;
+
+        try
+        {
+            String firstRow = i_HeaderString.substring(0, i_HeaderString.indexOf("\r\n"));
+            String headersSection = i_HeaderString.substring(i_HeaderString.indexOf("\r\n"));
+            
+            parseFirstRow(firstRow);
+            parseHeadersSection(headersSection);
+            m_ResponseCode = 200;
+            m_IsValidRequest = true;
+        }
+        catch(HTTPException e)
+        {
+            m_ResponseCode = e.getErrorCode();
+            m_IsValidRequest = false;
+            throw new Exception();
+        }
     }
 
     public void setBody(String i_HTTPBodyString) 
     {
         String[] params = i_HTTPBodyString.split("&");
 
+        m_RequestString += "\n" + i_HTTPBodyString;
         for(String keyValuePair : params)
         {
             String[] keyValueArray = keyValuePair.split("=");
@@ -49,14 +65,9 @@ class HTTPRequest {
         return m_Type;
     }
 
-    public Boolean isChunked() 
+    public boolean isChunked() 
     {
         return m_IsChunked;
-    }
-
-    public boolean isImageRequested() 
-    {
-        return m_IsImageRequested;
     }
 
     public int getContentLength() 
@@ -74,35 +85,58 @@ class HTTPRequest {
         return m_UserAgent;
     }
 
+    public String getRequestString()
+    {
+        return m_RequestString;
+    }
+
     public HashMap<String, String> getParams() 
     {
         return m_Params;
     }
 
+    public String getResponse() throws IOException
+    {
+        String response = "";
+
+        if(m_IsValidRequest)
+        {
+            response = ResponseGenerator.GenerateValidResponse(this);
+        }
+        else
+        {
+            response = ResponseGenerator.GenerateInvalidResponse(this, m_ResponseCode);
+        }
+
+        return response;
+    }
+
     private void parseFirstRow(String i_FirstRow) throws HTTPException
     {
         String[] tokens = i_FirstRow.split("\\s*");
-        
-        if(! isHTTPVersionValid(tokens[0])){
-            throw new HTTPException("HTTP Version Not Supported", 505);
-        }
+        String requestedFile = (tokens[1] == "/") ? ConfigParser.getDefaultPagePath() : tokens[1];
+        String filePath = ConfigParser.getRoot() + "/" + requestedFile;
 
         try 
         {
-            m_Type = eHTTPType.getTypeByString(tokens[1]);
+            m_Type = eHTTPType.getTypeByString(tokens[0]);
         }
         catch(Exception e)
         {
             throw new HTTPException("Bad Request", 400);
         }
 
-        if(Files.exists(Paths.get(tokens[2])))
+        if(Files.exists(Paths.get(securePath(filePath))))
         {
-            m_RequestedPage = tokens[2];
+            m_RequestedPage = securePath(filePath);
         }
         else
         {
             throw new HTTPException("Not Found", 404);
+        }
+
+        if(! isHTTPVersionValid(tokens[2])){
+            throw new HTTPException("HTTP Version Not Supported", 505);
         }
     }
 
@@ -127,6 +161,9 @@ class HTTPRequest {
                     case "User-Agent":
                         m_UserAgent = tokens[1];
                         break;
+                    case "Transfer-Encoding":
+                        m_IsChunked = tokens[1] == "chunked";
+                        break;
                     default:
                         break;
                 }
@@ -136,5 +173,10 @@ class HTTPRequest {
 
     private boolean isHTTPVersionValid(String i_HTTPVersion){
         return false;
+    }
+
+    private String securePath(String i_UserRequestedPath)
+    {
+        return i_UserRequestedPath.replace("/../", "/");
     }
 }

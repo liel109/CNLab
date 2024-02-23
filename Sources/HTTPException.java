@@ -8,4 +8,9 @@ public class HTTPException extends Exception
         m_ErrorMessage = i_ErrorMessage;
         m_ErrorCode = i_ErrorCode;
     }
+
+    public int getErrorCode()
+    {
+        return m_ErrorCode;
+    }
 }
