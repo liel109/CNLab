@@ -4,7 +4,7 @@ public class HTTPException extends Exception
     private final int m_ErrorCode;
 
     public HTTPException(String i_ErrorMessage, int i_ErrorCode) {
-        super();
+        super(i_ErrorMessage);
         m_ErrorMessage = i_ErrorMessage;
         m_ErrorCode = i_ErrorCode;
     }

@@ -12,11 +12,11 @@ class HTTPRequest
     private int m_ContentLength;
     private String m_Referrer;
     private String m_UserAgent;
-    private HashMap<String, String> m_Params;
+    private final HashMap<String, String> m_Params = new HashMap<String, String>();
     private boolean m_IsValidRequest;
     private int m_ResponseCode;
 
-    public HTTPRequest(String i_HeaderString) throws Exception 
+    public HTTPRequest(String i_HeaderString) 
     {
         m_RequestString = i_HeaderString;
 
@@ -34,7 +34,6 @@ class HTTPRequest
         {
             m_ResponseCode = e.getErrorCode();
             m_IsValidRequest = false;
-            throw new Exception();
         }
     }
 
@@ -51,7 +50,11 @@ class HTTPRequest
             {
                 m_Params.put(keyValueArray[0], keyValueArray[1]);
             }
-            catch(Exception e){}
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.out.println(e.getMessage());
+            }
         }
     }
 
@@ -113,9 +116,9 @@ class HTTPRequest
 
     private void parseFirstRow(String i_FirstRow) throws HTTPException
     {
-        String[] tokens = i_FirstRow.split("\\s*");
-        String requestedFile = (tokens[1] == "/") ? ConfigParser.getDefaultPagePath() : tokens[1];
-        String filePath = ConfigParser.getRoot() + "/" + requestedFile;
+        String[] tokens = i_FirstRow.split("\\s+");
+        String requestedFile = (tokens[1].equals("/")) ? "/"+ ConfigParser.getDefaultPagePath() : tokens[1];
+        String filePath = ConfigParser.getRoot() + requestedFile;
 
         try 
         {
@@ -171,12 +174,41 @@ class HTTPRequest
         }
     }
 
-    private boolean isHTTPVersionValid(String i_HTTPVersion){
-        return false;
+    private boolean isHTTPVersionValid(String i_HTTPVersion)
+    {
+        return i_HTTPVersion.equals("HTTP/1") || i_HTTPVersion.equals("HTTP/1.1") || 
+               i_HTTPVersion.equals("HTTP/2") || i_HTTPVersion.equals("HTTP/3");
     }
 
     private String securePath(String i_UserRequestedPath)
     {
         return i_UserRequestedPath.replace("/../", "/");
+    }
+
+    @Override
+    public String toString() 
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("HTTPRequest {");
+        builder.append("\n  Request String: ").append(m_RequestString);
+        builder.append("\n  Type: ").append(m_Type);
+        builder.append("\n  Requested Page: ").append(m_RequestedPage);
+        builder.append("\n  Is Chunked: ").append(m_IsChunked);
+        builder.append("\n  Content Length: ").append(m_ContentLength);
+        builder.append("\n  Referrer: ").append(m_Referrer);
+        builder.append("\n  User Agent: ").append(m_UserAgent);
+        
+        builder.append("\n  Params: {");
+        if (m_Params != null) {
+            for (HashMap.Entry<String, String> entry : m_Params.entrySet()) {
+                builder.append("\n    ").append(entry.getKey()).append(": ").append(entry.getValue());
+            }
+        }
+        builder.append("\n  }");
+        
+        builder.append("\n  Is Valid Request: ").append(m_IsValidRequest);
+        builder.append("\n  Response Code: ").append(m_ResponseCode);
+        builder.append("\n}");
+        return builder.toString();
     }
 }
