@@ -5,7 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-
 public class TCPConnectionHandler implements Runnable
 {
     private final Socket clientSocket;
@@ -24,35 +23,12 @@ public class TCPConnectionHandler implements Runnable
         {
             while(true)
             {
-                StringBuilder headerBuilder = new StringBuilder();
-                boolean isEndOfHeader = false;
-
-                while(!isEndOfHeader)
-                {
-                    String currentLine = reader.readLine();
-
-                    headerBuilder.append(currentLine + "\r\n");
-                    isEndOfHeader = currentLine.isEmpty();
-                }
                 
-                HTTPRequest request = new HTTPRequest(headerBuilder.toString());
-
-                headerBuilder.setLength(0);
-
+                HTTPRequest request = new HTTPRequest(readHeader(reader));
+                
                 if(request.getType() == eHTTPType.POST)
                 {
-                    StringBuilder bodyBuilder = new StringBuilder();
-                    int bytesToRead = request.getContentLength();
-
-                    while(bytesToRead > 0)
-                    {
-                        String content = reader.readLine();
-                        bodyBuilder.append(content);
-
-                        bytesToRead -= content.length();
-                    }
-
-                    request.setBody(bodyBuilder.toString());
+                    request.setBody(readBody(reader, request.getContentLength()));
                 }
 
                 if(request.isChunked())
@@ -69,7 +45,7 @@ public class TCPConnectionHandler implements Runnable
         }
         catch (IOException e)
         {
-            System.out.println(String.format("%s has left", clientSocket.getInetAddress()));
+            System.out.println(String.format("%s has left", clientSocket.getPort()));
         }
         finally
         {
@@ -79,5 +55,52 @@ public class TCPConnectionHandler implements Runnable
                 e.printStackTrace();
             }
         }
+    }
+
+    private String readHeader(BufferedReader i_Reader)
+    {
+        StringBuilder headerBuilder = new StringBuilder();
+        try
+        {
+            boolean isEndOfHeader = false;
+            while(!isEndOfHeader)
+            {
+                String currentLine = i_Reader.readLine();
+
+                headerBuilder.append(currentLine + "\r\n");
+                isEndOfHeader = currentLine.isEmpty();
+            }
+        } 
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return headerBuilder.toString();
+    }
+
+    private String readBody(BufferedReader i_Reader, int i_BytesToRead) 
+    {
+        StringBuilder bodyBuilder = new StringBuilder();
+        try
+        {
+            while(i_BytesToRead > 0)
+            {
+                int content = i_Reader.read();
+                
+                if(content == -1)
+                {
+                    break;
+                }
+                bodyBuilder.append((char)content);
+
+                i_BytesToRead--;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return bodyBuilder.toString();
     }
 }

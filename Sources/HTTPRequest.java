@@ -35,6 +35,11 @@ class HTTPRequest
             m_ResponseCode = e.getErrorCode();
             m_IsValidRequest = false;
         }
+        catch(Exception e)
+        {
+            m_ResponseCode = 500;
+            m_IsValidRequest = false;
+        }
     }
 
     public void setBody(String i_HTTPBodyString) 
@@ -116,6 +121,11 @@ class HTTPRequest
 
     private void parseFirstRow(String i_FirstRow) throws HTTPException
     {
+        if(i_FirstRow.isEmpty())
+        {
+            throw new HTTPException("Bad Request", 400);
+        }
+
         String[] tokens = i_FirstRow.split("\\s+");
         String requestedFile = (tokens[1].equals("/")) ? "/"+ ConfigParser.getDefaultPagePath() : tokens[1];
         String filePath = ConfigParser.getRoot() + requestedFile;
