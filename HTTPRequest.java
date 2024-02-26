@@ -130,7 +130,7 @@ class HTTPRequest
         String userRequestedPath = stripQueriesFromPath(tokens[1]);
         String requestedFile = (userRequestedPath.equals("/")) ? "/"+ ConfigParser.getDefaultPagePath() : userRequestedPath;
         String filePath = ConfigParser.getRoot() + requestedFile;
-
+        
         try 
         {
             m_Type = eHTTPType.getTypeByString(tokens[0]);

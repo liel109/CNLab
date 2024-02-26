@@ -39,7 +39,7 @@ public class TCPConnectionHandler implements Runnable
                 byte[] responseBody = extractBody(response);
 
                 System.out.println(String.format("Server Response:\n%s", responseHeader));
-                
+
                 out.write(responseHeader.getBytes());
 
                 if(request.isChunked())
@@ -137,10 +137,34 @@ public class TCPConnectionHandler implements Runnable
         return HTTPResponse.substring(0, HTTPResponse.indexOf("\r\n\r\n") + 4);
     }
 
-    private byte[] extractBody(byte[] i_HTTPByteArray)
+    private byte[] extractBody(byte[] i_HTTPByteArray) throws IllegalArgumentException
     {
-        String HTTPResponse = new String(i_HTTPByteArray, StandardCharsets.UTF_8);
+        int startIndex = indexOf(i_HTTPByteArray, "\r\n\r\n".getBytes());
+        if (startIndex != -1) {
+            return Arrays.copyOfRange(i_HTTPByteArray, startIndex, i_HTTPByteArray.length);
+        }
+        else {
+            throw new IllegalArgumentException();
+        }
+    }
 
-        return HTTPResponse.substring(HTTPResponse.indexOf("\r\n\r\n") + 4, HTTPResponse.length()).getBytes();
+    private int indexOf(byte[] sourceArray, byte[] sequence) 
+    {
+        if (sequence.length == 0) {
+            return 0;
+        }
+        for (int i = 0; i < sourceArray.length - sequence.length + 1; i++) {
+            boolean found = true;
+            for (int j = 0; j < sequence.length; j++) {
+                if (sourceArray[i + j] != sequence[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                return i + sequence.length;
+            }
+        }
+        return -1;
     }
 }

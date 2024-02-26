@@ -6,7 +6,7 @@ public class TCPServer {
     public static void main(String[] args) {
 
         try {
-            ConfigParser.parseConfigFile("Sources/config.ini");
+            ConfigParser.parseConfigFile("config.ini");
         } catch (Exception e) {
             e.printStackTrace();
             return;
