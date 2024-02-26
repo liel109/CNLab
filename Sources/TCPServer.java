@@ -15,8 +15,8 @@ public class TCPServer {
         int port = ConfigParser.getPort();
         int maxThreads = ConfigParser.getMaxThreadNumber();
 
-        try {
-            ServerSocket serverSocket = new ServerSocket(port);
+        try (ServerSocket serverSocket = new ServerSocket(port);) 
+        {
             ExecutorService executor = Executors.newFixedThreadPool(maxThreads);
             System.out.println("Server is running on port " + port);
             while (true) {

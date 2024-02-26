@@ -100,7 +100,7 @@ class HTTPRequest
 
     public String getResponse() throws IOException
     {
-        String response = "";
+        String response;
 
         if(m_IsValidRequest)
         {
@@ -165,7 +165,7 @@ class HTTPRequest
                         m_UserAgent = tokens[1];
                         break;
                     case "Transfer-Encoding":
-                        m_IsChunked = tokens[1] == "chunked";
+                        m_IsChunked = tokens[1].equals("chunked");
                         break;
                     default:
                         break;

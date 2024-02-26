@@ -95,6 +95,8 @@ public class ResponseGenerator {
             return "image/bmp";
         } else if (i_RequestedPage.endsWith(".ico")) {
             return "image/x-icon";
+        } else if (i_RequestedPage.endsWith(".css")) {
+            return "text/css";
         } else {
             return "application/octet-stream";
         }
