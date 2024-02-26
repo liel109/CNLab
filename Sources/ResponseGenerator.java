@@ -3,8 +3,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
-public class ResponseGenerator {
-
+public class ResponseGenerator 
+{
     public static byte[] GenerateValidResponse(HTTPRequest i_Request) throws IOException {
         byte[] response;
         if (i_Request.getType() == eHTTPType.TRACE) {
@@ -111,5 +111,4 @@ public class ResponseGenerator {
         System.arraycopy(secondArray, 0, result, firstArray.length, secondArray.length);
         return result;
     }
-
 }

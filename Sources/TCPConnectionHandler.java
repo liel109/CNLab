@@ -1,13 +1,15 @@
 import java.net.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream ;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class TCPConnectionHandler implements Runnable
 {
     private final Socket clientSocket;
+    private final int r_ChunkSize = 1024;
 
     public TCPConnectionHandler(Socket i_ClientSocket) 
     {
@@ -19,26 +21,50 @@ public class TCPConnectionHandler implements Runnable
     {
         System.out.println("Listeninng on port " + clientSocket.getPort());
         try ( BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())))
+              BufferedOutputStream  out = new BufferedOutputStream(clientSocket.getOutputStream()))
         {
             while(true)
             {
-                
-                HTTPRequest request = new HTTPRequest(readHeader(reader));
+                String header = readHeader(reader);
+                System.out.println(String.format("Client Request:\n%s", header));
+                HTTPRequest request = new HTTPRequest(header);
                 
                 if(request.getType() == eHTTPType.POST)
                 {
                     request.setBody(readBody(reader, request.getContentLength()));
                 }
 
+                byte[] response = request.getResponse();
+                String responseHeader = extractHeader(response);
+                byte[] responseBody = extractBody(response);
+
+                System.out.println(String.format("Server Response:\n%s", responseHeader));
+                
+                out.write(responseHeader.getBytes());
+
                 if(request.isChunked())
                 {
-                    // TODO
+                    int i = 0;
+                    while(i < responseBody.length / r_ChunkSize)
+                    {
+                        out.write((Integer.toHexString(r_ChunkSize) + "\r\n").getBytes());
+                        out.write(Arrays.copyOfRange(responseBody, i * r_ChunkSize, (i+1) * r_ChunkSize));
+                        out.write("\r\n".getBytes());
+                        out.flush();
+                        i++;
+                    }
+                    
+                    if(responseBody.length != 0)
+                    {
+                        out.write((Integer.toHexString(responseBody.length % r_ChunkSize) + "\r\n").getBytes());
+                        out.write(Arrays.copyOfRange(responseBody, i * r_ChunkSize , responseBody.length));
+                        out.write("\r\n0\r\n\r\n".getBytes());
+                        out.flush();
+                    }
                 }
                 else
                 {
-                    String response = request.getResponse();
-                    out.write(response.toString());
+                    out.write(responseBody);
                     out.flush();
                 }
             }
@@ -102,5 +128,19 @@ public class TCPConnectionHandler implements Runnable
         }
 
         return bodyBuilder.toString();
+    }
+
+    private String extractHeader(byte[] i_HTTPByteArray)
+    {
+        String HTTPResponse = new String(i_HTTPByteArray, StandardCharsets.UTF_8);
+
+        return HTTPResponse.substring(0, HTTPResponse.indexOf("\r\n\r\n") + 4);
+    }
+
+    private byte[] extractBody(byte[] i_HTTPByteArray)
+    {
+        String HTTPResponse = new String(i_HTTPByteArray, StandardCharsets.UTF_8);
+
+        return HTTPResponse.substring(HTTPResponse.indexOf("\r\n\r\n") + 4, HTTPResponse.length()).getBytes();
     }
 }

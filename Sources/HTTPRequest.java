@@ -102,10 +102,10 @@ class HTTPRequest
     {
         return m_Params;
     }
-
-    public String getResponse() throws IOException
+    
+    public byte[] getResponse() throws IOException
     {
-        String response;
+        byte[] response;
 
         if(m_IsValidRequest)
         {
@@ -121,13 +121,14 @@ class HTTPRequest
 
     private void parseFirstRow(String i_FirstRow) throws HTTPException
     {
-        if(i_FirstRow.isEmpty())
+        if(i_FirstRow == null)
         {
             throw new HTTPException("Bad Request", 400);
         }
 
         String[] tokens = i_FirstRow.split("\\s+");
-        String requestedFile = (tokens[1].equals("/")) ? "/"+ ConfigParser.getDefaultPagePath() : tokens[1];
+        String userRequestedPath = stripQueriesFromPath(tokens[1]);
+        String requestedFile = (userRequestedPath.equals("/")) ? "/"+ ConfigParser.getDefaultPagePath() : userRequestedPath;
         String filePath = ConfigParser.getRoot() + requestedFile;
 
         try 
@@ -136,7 +137,7 @@ class HTTPRequest
         }
         catch(Exception e)
         {
-            throw new HTTPException("Bad Request", 400);
+            throw new HTTPException("Not Implemented", 501);
         }
 
         if(Files.exists(Paths.get(securePath(filePath))))
@@ -193,6 +194,16 @@ class HTTPRequest
     private String securePath(String i_UserRequestedPath)
     {
         return i_UserRequestedPath.replace("/../", "/");
+    }
+
+    private String stripQueriesFromPath(String i_UserRequestedPath)
+    {
+        int queryStartIndex;
+        if((queryStartIndex = i_UserRequestedPath.indexOf("?")) != -1)
+        {
+            return i_UserRequestedPath.substring(0, i_UserRequestedPath.indexOf("?"));
+        }
+        return i_UserRequestedPath;
     }
 
     @Override
